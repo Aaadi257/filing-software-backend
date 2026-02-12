@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
-import models, schemas
+from . import models, schemas
 from datetime import datetime, date
 
 # Company
