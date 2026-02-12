@@ -62,7 +62,11 @@ def get_file(db: Session, file_id: int):
     return db.query(models.File).filter(models.File.id == file_id).first()
 
 def get_files(db: Session, skip: int = 0, limit: int = 100, search: str = None):
-    query = db.query(models.File)
+    query = db.query(models.File).filter(
+        models.File.company_id.isnot(None),
+        models.File.rack_id.isnot(None),
+        models.File.category_id.isnot(None)
+    )
     if search:
         query = query.filter(
             or_(
@@ -71,6 +75,7 @@ def get_files(db: Session, skip: int = 0, limit: int = 100, search: str = None):
             )
         )
     return query.offset(skip).limit(limit).all()
+
 
 def create_file(db: Session, file: schemas.FileCreate):
     company = get_company(db, file.company_id)
