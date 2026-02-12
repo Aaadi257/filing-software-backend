@@ -12,6 +12,10 @@ router = APIRouter(
 
 @router.post("/", response_model=schemas.Movement)
 def create_movement(movement: schemas.MovementCreate, db: Session = Depends(get_db)):
+    # Ensure the file exists before creating a movement
+    db_file = crud.get_file(db, movement.file_id)
+    if not db_file:
+        raise HTTPException(status_code=400, detail="Referenced file does not exist")
     return crud.create_movement(db=db, movement=movement)
 
 @router.get("/", response_model=List[schemas.Movement])

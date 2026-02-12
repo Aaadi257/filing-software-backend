@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from . import models, schemas
 from datetime import datetime, date
@@ -124,7 +124,8 @@ def create_movement(db: Session, movement: schemas.MovementCreate):
     return db_movement
 
 def get_movements(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Movement).offset(skip).limit(limit).all()
+    # Only return movements that are linked to an existing file to avoid response validation errors
+    return db.query(models.Movement).options(joinedload(models.Movement.file)).filter(models.Movement.file_id.isnot(None)).offset(skip).limit(limit).all()
 
 def update_movement_status(db: Session, movement_id: int, actual_return_date: date):
     db_movement = db.query(models.Movement).filter(models.Movement.id == movement_id).first()
