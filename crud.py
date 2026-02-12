@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
-import models
-import schemas
+from . import models, schemas
 from datetime import datetime, date
 
 # Company
@@ -129,4 +128,40 @@ def update_movement_status(db: Session, movement_id: int, actual_return_date: da
         db_movement.status = "Received"
         db.commit()
         db.refresh(db_movement)
+    return db_movement
+
+# Delete functions
+def delete_company(db: Session, company_id: int):
+    db_company = db.query(models.Company).filter(models.Company.id == company_id).first()
+    if db_company:
+        db.delete(db_company)
+        db.commit()
+    return db_company
+
+def delete_rack(db: Session, rack_id: int):
+    db_rack = db.query(models.Rack).filter(models.Rack.id == rack_id).first()
+    if db_rack:
+        db.delete(db_rack)
+        db.commit()
+    return db_rack
+
+def delete_category(db: Session, category_id: int):
+    db_category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if db_category:
+        db.delete(db_category)
+        db.commit()
+    return db_category
+
+def delete_file(db: Session, file_id: int):
+    db_file = db.query(models.File).filter(models.File.id == file_id).first()
+    if db_file:
+        db.delete(db_file)
+        db.commit()
+    return db_file
+
+def delete_movement(db: Session, movement_id: int):
+    db_movement = db.query(models.Movement).filter(models.Movement.id == movement_id).first()
+    if db_movement:
+        db.delete(db_movement)
+        db.commit()
     return db_movement

@@ -2,10 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-import crud
-import models
-import schemas
-from database import get_db
+from .. import crud, models, schemas
+from ..database import get_db
 
 
 router = APIRouter(
@@ -48,3 +46,24 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
 @router.get("/categories/", response_model=List[schemas.Category])
 def read_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_categories(db, skip=skip, limit=limit)
+
+@router.delete("/companies/{company_id}")
+def delete_company(company_id: int, db: Session = Depends(get_db)):
+    db_company = crud.delete_company(db, company_id=company_id)
+    if not db_company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return {"message": "Company deleted successfully"}
+
+@router.delete("/racks/{rack_id}")
+def delete_rack(rack_id: int, db: Session = Depends(get_db)):
+    db_rack = crud.delete_rack(db, rack_id=rack_id)
+    if not db_rack:
+        raise HTTPException(status_code=404, detail="Rack not found")
+    return {"message": "Rack deleted successfully"}
+
+@router.delete("/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db)):
+    db_category = crud.delete_category(db, category_id=category_id)
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return {"message": "Category deleted successfully"}
