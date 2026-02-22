@@ -1,8 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from pydantic import BaseModel
 from backend import crud, models, schemas
 from backend.database import get_db
+
+class DeleteMasterRequest(BaseModel):
+    password: str
 
 router = APIRouter(
     prefix="/masters",
@@ -46,21 +50,27 @@ def read_categories(skip: int = 0, limit: int = 100, db: Session = Depends(get_d
     return crud.get_categories(db, skip=skip, limit=limit)
 
 @router.delete("/companies/{company_id}")
-def delete_company(company_id: int, db: Session = Depends(get_db)):
+def delete_company(company_id: int, request: DeleteMasterRequest, db: Session = Depends(get_db)):
+    if request.password != "ABCD1234":
+        raise HTTPException(status_code=403, detail="Incorrect password")
     db_company = crud.delete_company(db, company_id=company_id)
     if not db_company:
         raise HTTPException(status_code=404, detail="Company not found")
     return {"message": "Company deleted successfully"}
 
 @router.delete("/racks/{rack_id}")
-def delete_rack(rack_id: int, db: Session = Depends(get_db)):
+def delete_rack(rack_id: int, request: DeleteMasterRequest, db: Session = Depends(get_db)):
+    if request.password != "ABCD1234":
+        raise HTTPException(status_code=403, detail="Incorrect password")
     db_rack = crud.delete_rack(db, rack_id=rack_id)
     if not db_rack:
         raise HTTPException(status_code=404, detail="Rack not found")
     return {"message": "Rack deleted successfully"}
 
 @router.delete("/categories/{category_id}")
-def delete_category(category_id: int, db: Session = Depends(get_db)):
+def delete_category(category_id: int, request: DeleteMasterRequest, db: Session = Depends(get_db)):
+    if request.password != "ABCD1234":
+        raise HTTPException(status_code=403, detail="Incorrect password")
     db_category = crud.delete_category(db, category_id=category_id)
     if not db_category:
         raise HTTPException(status_code=404, detail="Category not found")

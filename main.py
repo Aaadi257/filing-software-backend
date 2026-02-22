@@ -25,17 +25,19 @@ app.include_router(masters.router, prefix="/api")
 app.include_router(files.router, prefix="/api")
 app.include_router(movements.router, prefix="/api")
 
-# Detect base path (normal vs PyInstaller)
+# Detect correct base path
 if getattr(sys, "frozen", False):
-    base_path = sys._MEIPASS
+    # Running inside PyInstaller bundle
+    base_path = os.path.join(os.path.dirname(sys.executable), "_internal")
 else:
-    base_path = os.path.dirname(os.path.abspath(__file__))
+    # Running in dev
+    base_path = os.path.dirname(__file__)
 
-# Frontend build path
 frontend_path = os.path.join(base_path, "frontend_build")
 
 print("Frontend path:", frontend_path)
 
+# Serve React build
 if os.path.exists(frontend_path):
     app.mount(
         "/",

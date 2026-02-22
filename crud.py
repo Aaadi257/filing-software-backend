@@ -61,19 +61,26 @@ def create_category(db: Session, category: schemas.CategoryCreate):
 def get_file(db: Session, file_id: int):
     return db.query(models.File).filter(models.File.id == file_id).first()
 
-def get_files(db: Session, skip: int = 0, limit: int = 100, search: str = None):
+def get_files(db: Session, skip: int = 0, limit: int = 100, search: str = None, company_id: int = None, category_id: int = None):
     query = db.query(models.File).filter(
         models.File.company_id.isnot(None),
         models.File.rack_id.isnot(None),
         models.File.category_id.isnot(None)
     )
     if search:
-        query = query.filter(
+        search_term = search.strip().lower()
+        query = query.join(models.Company).filter(
             or_(
-                models.File.name.ilike(f"%{search}%"),
-                models.File.reference_code.ilike(f"%{search}%")
+                models.File.name.ilike(f"%{search_term}%"),
+                models.File.reference_code.ilike(f"%{search_term}%"),
+                models.Company.name.ilike(f"%{search_term}%")
             )
         )
+    if company_id:
+        query = query.filter(models.File.company_id == company_id)
+    if category_id:
+        query = query.filter(models.File.category_id == category_id)
+        
     return query.offset(skip).limit(limit).all()
 
 
@@ -83,20 +90,30 @@ def create_file(db: Session, file: schemas.FileCreate):
     
     year = datetime.now().year
     
-    company_code = company.name[:3].upper()
-    category_prefix = category.name[:3].upper()
+    company_name_clean = company.name.strip().upper()
+    company_code = company_name_clean[:3] if len(company_name_clean) > 3 else company_name_clean
+    category_prefix = category.code.strip().upper()
+    file_name = file.name.strip().upper()
     
-    prefix = f"{company_code}/{year}/{category_prefix}"
+    prefix = f"{file_name}/{year}/{category_prefix}/{company_code}"
     
-    last_file = db.query(models.File).filter(models.File.reference_code.like(f"{prefix}%")).order_by(models.File.id.desc()).first()
+    last_file = (
+        db.query(models.File)
+        .filter(models.File.company_id == file.company_id)
+        .order_by(models.File.id.desc())
+        .first()
+    )
     
     if last_file:
         try:
+            # Extract last 4-digit number from its reference_code safely
             last_number = int(last_file.reference_code.split('/')[-1])
             running_number = last_number + 1
-        except ValueError:
+        except (ValueError, IndexError):
+            # Fallback if reference code is malformed
             running_number = 1
     else:
+        # First file for this company
         running_number = 1
     
     reference_code = f"{prefix}/{running_number:04d}"
